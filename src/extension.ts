@@ -1,24 +1,9 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-// import * as grpc from '@grpc/grpc-js'
-// import { BrokerClient  as DatabrokerClient } from './sdv/databroker/v1/broker_grpc_pb';
-// import { GetDatapointsRequest } from './sdv/databroker/v1/broker_pb';
+import * as grpc from '@grpc/grpc-js'
+import { BrokerClient as DatabrokerClient } from './sdv/databroker/v1/broker_grpc_pb';
+import { GetDatapointsReply, GetDatapointsRequest } from './sdv/databroker/v1/broker_pb';
 
-function getDataPoint(panel: vscode.WebviewPanel, vssPath: string, databrokerURL: URL) {
-//   const c = new DatabrokerClient (
-//     `${databrokerURL.hostname}:${databrokerURL.port}`,
-//     grpc.credentials.createInsecure()
-//   );
-//   const r = new GetDatapointsRequest().setDatapointsList([vssPath]);
-
-//   let val  = 0.0;
-//   c.getDatapoints(r, (err, resp) => {
-//     val = parseFloat(resp.getDatapointsMap()[vssPath]);
-//   });
-
-//   return val
-	return Math.random();
-}
 
 function uiLog(panel: vscode.WebviewPanel, logMsg: string) {
   panel.webview.postMessage({ command: 'log', logText: `[BACKEND] ${logMsg}` });
@@ -33,7 +18,7 @@ function parseConfig(configMsg: any) {
   }
 
   const updateInterval = parseInt(configMsg.updateInterval);
-  return { databrokerURL: url, updateInterval: updateInterval, signalPath: configMsg.signalPath }
+  return { databrokerURL: url, updateInterval: updateInterval, signalPath: configMsg.signalPath };
 
 }
 
@@ -52,12 +37,12 @@ export function activate(context: vscode.ExtensionContext) {
       );
 
       // Set the HTML content for the webview
-      render_webview(panel, context);
+      renderWebview(panel, context);
       let plotTaskHandles: NodeJS.Timer[] = [];
 
       panel.webview.onDidReceiveMessage(
         message => {
-          if (message.command == "initPlot") {
+          if (message.command === "initPlot") {
 
             let config;
             try {
@@ -77,7 +62,7 @@ export function activate(context: vscode.ExtensionContext) {
             // There already was a plot, cancel it's data feeder and redraw
             if (plotTaskHandles.length > 1) {
               clearOldFeeders(plotTaskHandles);
-              uiLog(panel, "UI redrawn")
+              uiLog(panel, "UI redrawn");
             }
 
             return;
@@ -99,21 +84,48 @@ function clearOldFeeders(plotTaskHandles: NodeJS.Timer[]) {
 
 function startDataFeeder(panel: vscode.WebviewPanel, config: any) {
   let cntr = 1;
+  const c = new DatabrokerClient(
+    `${config.databrokerURL.hostname}:${config.databrokerURL.port}`,
+    grpc.credentials.createInsecure()
+  );
+  const r = new GetDatapointsRequest();
+
+  r.setDatapointsList([config.signalPath]);
+
   let handle = setInterval(() => {
-    // hack: call count * updateInteval (ms) / 1000 = monotonic time in seconds starting from the draw init
-    panel.webview.postMessage({
-      command: 'updatePlot',
-      data: {
-        x: [[cntr * config.updateInterval / 1000]],
-        y: [[getDataPoint(panel, config.signalPath, config.databrokerURL)]]
-      }
+    c.getDatapoints(r, (err, resp) => {
+      let val: number = extractDataPointValue(resp, config.signalPath);
+
+      // hack: call count * updateInteval (ms) / 1000 = monotonic time in seconds starting from the draw init
+      panel.webview.postMessage({
+        command: 'updatePlot',
+        data: {
+          x: [[cntr * config.updateInterval / 1000]],
+          y: [[val]]
+        }
+      });
     });
     cntr += 1;
   }, config.updateInterval);
   return handle;
 }
 
-function render_webview(panel: vscode.WebviewPanel, context: vscode.ExtensionContext) {
+function extractDataPointValue(resp: GetDatapointsReply, signalPath: any) {
+  let val: number | undefined = 0.0;
+  try {
+    let map = resp.getDatapointsMap();
+    val = map.get(signalPath)?.getFloatValue();
+  } catch (valerr) {
+    console.log("Value parsing error!");
+    console.log(valerr);
+  }
+  if (val === undefined) {
+    return 0.0
+  }
+  return val;
+}
+
+function renderWebview(panel: vscode.WebviewPanel, context: vscode.ExtensionContext) {
   panel.webview.html = `
         <!DOCTYPE html>
         <html lang="en">

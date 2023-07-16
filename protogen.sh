@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 npm install grpc-tools @grpc/grpc-js ts-protoc-gen grpc grpc_tools_node_protoc_ts google-protobuf
-ln -s kuksa.val/kuksa_databroker/proto/sdv
+npm i --save-dev @types/google-protobuf
+
 OUT_DIR="./out"
 TS_OUT_DIR="./src"
 IN_DIR="sdv/databroker/v1"
@@ -34,10 +35,10 @@ $PROTOC \
     --ts_out=service=grpc-node:$TS_OUT_DIR \
     "$IN_DIR"/collector.proto
 
-sed -i "" -e \
-    "s/require('grpc')/require('@grpc\/grpc-js')/g" \
-    "$OUT_DIR/$IN_DIR/"*
+# sed -i "" -e \
+#     "s/require('grpc')/require('@grpc\/grpc-js')/g" \
+#     "$OUT_DIR/$IN_DIR/"*
 
-sed -i "" -e \
-    "s/from \"grpc\"/from \"@grpc\/grpc-js\"/g" \
-    "$TS_OUT_DIR/$IN_DIR/"*
+# sed -i "" -e \
+#     "s/from \"grpc\"/from \"@grpc\/grpc-js\"/g" \
+#     "$TS_OUT_DIR/$IN_DIR/"*
