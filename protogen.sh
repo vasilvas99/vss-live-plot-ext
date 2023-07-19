@@ -1,44 +1,15 @@
-#!/usr/bin/env bash
+#!/usr/bin/env bash 
 
-npm install grpc-tools @grpc/grpc-js ts-protoc-gen grpc grpc_tools_node_protoc_ts google-protobuf
-npm i --save-dev @types/google-protobuf
+npm install protobufjs long nice-grpc isomorphic-fetch
+npm i --save-dev @types/google-protobuf ts-proto grpc-tools
 
-OUT_DIR="./out"
-TS_OUT_DIR="./src"
+TS_OUT_DIR="./src/proto_gen"
 IN_DIR="sdv/databroker/v1"
-PROTOC="$(npm bin)/grpc_tools_node_protoc"
-PROTOC_GEN_TS="$(npm bin)/protoc-gen-ts"
+PROTOC="protoc"
 
-mkdir -p "$OUT_DIR"
+mkdir $TS_OUT_DIR
 
-$PROTOC \
-    -I=./ \
-    --plugin=protoc-gen-ts=$PROTOC_GEN_TS \
-    --js_out=import_style=commonjs:$OUT_DIR \
-    --grpc_out=:$OUT_DIR \
-    --ts_out=service=grpc-node:$TS_OUT_DIR \
-    "$IN_DIR"/broker.proto
-
-$PROTOC \
-    -I=./ \
-    --plugin=protoc-gen-ts=$PROTOC_GEN_TS \
-    --js_out=import_style=commonjs:$OUT_DIR \
-    --grpc_out=:$OUT_DIR \
-    --ts_out=service=grpc-node:$TS_OUT_DIR \
-    "$IN_DIR"/types.proto
-
-$PROTOC \
-    -I=./ \
-    --plugin=protoc-gen-ts=$PROTOC_GEN_TS \
-    --js_out=import_style=commonjs:$OUT_DIR \
-    --grpc_out=:$OUT_DIR \
-    --ts_out=service=grpc-node:$TS_OUT_DIR \
-    "$IN_DIR"/collector.proto
-
-# sed -i "" -e \
-#     "s/require('grpc')/require('@grpc\/grpc-js')/g" \
-#     "$OUT_DIR/$IN_DIR/"*
-
-# sed -i "" -e \
-#     "s/from \"grpc\"/from \"@grpc\/grpc-js\"/g" \
-#     "$TS_OUT_DIR/$IN_DIR/"*
+$PROTOC --plugin=node_modules/ts-proto/protoc-gen-ts_proto \
+        --ts_proto_opt=env=browser,outputServices=nice-grpc,outputServices=generic-definitions,outputJsonMethods=false,useExactTypes=false,useContext=false,oneof=unions  \
+        --ts_proto_out=$TS_OUT_DIR \
+        $IN_DIR/broker.proto -I./kuksa.val/kuksa_databroker/proto/ \
