@@ -24,7 +24,7 @@ The webview uses Plotly (included under `media/plotly.min.js`). To draw and mani
 
 ## Compiling the protobufs
 
-Protobufs for the communication come pre-compiled but if you wish to re-compile them, run:
+Protobufs for the communication come pre-compiled but if you wish to re-compile them:
 
 Check-out the kuksa.val submodule:
 
@@ -53,7 +53,7 @@ And then press <kbd>F5</kbd> to open the extension debug host.
 
 In the extension debug host window, open the VSCode Console (<kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>P</kbd>) and start typing
 ```VSS Live Plot``` in the pop-up.  Select the extension command with the arrow keys and press <kbd>Enter</kbd>. You should now 
-see a screen similar to the one in the screenshot at the beginning of the readme. (without the plot).
+see a screen similar to the one in the screenshot at the beginning of the readme (without the plot).
 
 Configure the signal you want to monitor and how often the extension should poll the databroker and press `Start`.
 
