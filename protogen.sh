@@ -12,4 +12,4 @@ mkdir $TS_OUT_DIR
 $PROTOC --plugin=node_modules/ts-proto/protoc-gen-ts_proto \
         --ts_proto_opt=env=browser,outputServices=nice-grpc,outputServices=generic-definitions,outputJsonMethods=false,useExactTypes=false,useContext=false,oneof=unions  \
         --ts_proto_out=$TS_OUT_DIR \
-        $IN_DIR/broker.proto -I./kuksa.val/kuksa_databroker/proto/ \
+        $IN_DIR/broker.proto -I./kuksa.val/kuksa_databroker/proto/
